@@ -11,24 +11,15 @@ import {
     InputLeftElement,
     Link,
     Text,
+    useToast,
 } from '@chakra-ui/react';
+import { Field, Form, Formik } from 'formik';
 import { BiLock } from 'react-icons/bi';
 import { BsFacebook, BsInstagram, BsTwitter } from 'react-icons/bs';
 import { FaRegUser } from 'react-icons/fa';
 import { redirect, useNavigate } from 'react-router-dom';
 import { fakeAuthProvider } from './auth';
-import { useState } from 'react';
-import { Formik } from 'formik';
-
-interface User {
-    username: string;
-    password: string;
-}
-
-interface UserError {
-    username: boolean;
-    password: boolean;
-}
+import { validatePassword, validateUsername } from '../../utils/validate';
 
 export async function loader() {
     if (fakeAuthProvider.isAuthenticated) {
@@ -39,26 +30,7 @@ export async function loader() {
 
 const Login = () => {
     const navigate = useNavigate();
-
-    const [user, setUser] = useState<User>({
-        username: '',
-        password: '',
-    });
-
-    const [userError, setUserError] = useState<UserError>({
-        username: false,
-        password: false,
-    });
-
-    const handleLogin = async () => {
-        console.log('user: ', user);
-        setUserError({
-            username: !!user.username,
-            password: !!user.password,
-        });
-        // await fakeAuthProvider.signin(user.username)
-        // navigate("/")
-    };
+    const toast = useToast()
 
     return (
         <Box
@@ -83,47 +55,92 @@ const Login = () => {
             >
                 <Heading>Login</Heading>
                 <Box width={'full'} display={'flex'} flexDirection={'column'} alignItems={'center'}>
-                    <Formik>
-                        <FormControl width={'full'} mb={5} isInvalid={!user.username}>
-                            <FormLabel>Username</FormLabel>
-                            <InputGroup tabIndex={-1}>
-                                <InputLeftElement>
-                                    <Icon as={FaRegUser} />
-                                </InputLeftElement>
-                                <Input
-                                    tabIndex={0}
-                                    type="text"
-                                    variant={'flushed'}
-                                    placeholder="Type your username"
-                                    value={user.username}
-                                    onChange={(e) => setUser({ ...user, username: e.target.value })}
-                                />
-                            </InputGroup>
-                            {!userError.username && <FormErrorMessage>Username is required.</FormErrorMessage>}
-                        </FormControl>
-                        <FormControl width={'full'} mb={5} isInvalid={!userError.password}>
-                            <FormLabel>Password</FormLabel>
-                            <InputGroup tabIndex={-1}>
-                                <InputLeftElement>
-                                    <Icon as={BiLock} />
-                                </InputLeftElement>
-                                <Input
-                                    tabIndex={0}
-                                    type="password"
-                                    variant={'flushed'}
-                                    placeholder="Type your password"
-                                    value={user.password}
-                                    onChange={(e) => setUser({ ...user, password: e.target.value })}
-                                />
-                            </InputGroup>
-                            {!userError.password && <FormErrorMessage>Password is required.</FormErrorMessage>}
-                        </FormControl>
-                        <Link href="/forgot-password" width={'full'} textAlign={'right'}>
-                            Forgot password?
-                        </Link>
-                        <Button textTransform={'uppercase'} rounded={'3xl'} width={'80%'} mt={6} onClick={handleLogin}>
-                            login
-                        </Button>
+                    <Formik
+                        initialValues={{ username: '', password: '' }}
+                        onSubmit={ async (values, { setSubmitting }) => {
+                            await fakeAuthProvider.signin(values.username)
+                            toast({
+                                title: 'Account created.',
+                                description: "We've created your account for you.",
+                                status: 'success',
+                                duration: 2500,
+                                isClosable: true,
+                            })
+                            setTimeout(() => {
+                                setSubmitting(false);
+                                navigate("/")
+                            }, 500);
+                        }}
+                    >
+                        {({
+                            handleSubmit,
+                            isSubmitting,
+                            /* and other goodies */
+                        }) => (
+                            <Form className='w-full flex flex-col items-center' onSubmit={handleSubmit}>
+                                <Field name="username" validate={validateUsername}>
+                                    {({ field, form }: { field: any; form: any }) => (
+                                        <FormControl
+                                            width={'full'}
+                                            mb={5}
+                                            isInvalid={form.errors.username && form.touched.username}
+                                        >
+                                            <FormLabel>Username</FormLabel>
+                                            <InputGroup tabIndex={-1}>
+                                                <InputLeftElement>
+                                                    <Icon as={FaRegUser} />
+                                                </InputLeftElement>
+                                                <Input
+                                                    {...field}
+                                                    tabIndex={0}
+                                                    type="text"
+                                                    variant={'flushed'}
+                                                    placeholder="Type your username"
+                                                />
+                                            </InputGroup>
+                                            <FormErrorMessage>{form.errors.username}</FormErrorMessage>
+                                        </FormControl>
+                                    )}
+                                </Field>
+                                <Field name="password" validate={validatePassword}>
+                                    {({ field, form }: { field: any; form: any }) => (
+                                        <FormControl
+                                            width={'full'}
+                                            mb={5}
+                                            isInvalid={form.errors.password && form.touched.password}
+                                        >
+                                            <FormLabel>Password</FormLabel>
+                                            <InputGroup tabIndex={-1}>
+                                                <InputLeftElement>
+                                                    <Icon as={BiLock} />
+                                                </InputLeftElement>
+                                                <Input
+                                                    {...field}
+                                                    tabIndex={0}
+                                                    type="password"
+                                                    variant={'flushed'}
+                                                    placeholder="Type your password"
+                                                />
+                                            </InputGroup>
+                                            <FormErrorMessage>{form.errors.password}</FormErrorMessage>
+                                        </FormControl>
+                                    )}
+                                </Field>
+                                <Link href="/forgot-password" width={'full'} textAlign={'right'}>
+                                    Forgot password?
+                                </Link>
+                                <Button
+                                    textTransform={'uppercase'}
+                                    rounded={'3xl'}
+                                    width={'80%'}
+                                    mt={6}
+                                    type='submit'
+                                    isLoading={isSubmitting}
+                                >
+                                    login
+                                </Button>
+                            </Form>
+                        )}
                     </Formik>
                     <Text my={2}>Or Sign Up Using</Text>
                     <Box>
