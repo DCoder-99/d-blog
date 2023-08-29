@@ -11,6 +11,7 @@ import {
     InputLeftElement,
     Link,
     Text,
+    Tooltip,
     useToast,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
@@ -30,7 +31,7 @@ export async function loader() {
 
 const Login = () => {
     const navigate = useNavigate();
-    const toast = useToast()
+    const toast = useToast();
 
     return (
         <Box
@@ -45,7 +46,8 @@ const Login = () => {
                 shadow={'base'}
                 height={'90%'}
                 bg="white"
-                width={{ base: '50%', xl: '33%' }}
+                width={{ base: '50%', xl: '25%' }}
+                minWidth={'350px'}
                 className="rounded-lg"
                 padding="1.5em 2em"
                 display={'flex'}
@@ -57,18 +59,17 @@ const Login = () => {
                 <Box width={'full'} display={'flex'} flexDirection={'column'} alignItems={'center'}>
                     <Formik
                         initialValues={{ username: '', password: '' }}
-                        onSubmit={ async (values, { setSubmitting }) => {
-                            await fakeAuthProvider.signin(values.username)
+                        onSubmit={async (values, { setSubmitting }) => {
+                            await fakeAuthProvider.signin(values.username);
                             toast({
-                                title: 'Account created.',
-                                description: "We've created your account for you.",
+                                title: 'Login success',
                                 status: 'success',
                                 duration: 2500,
                                 isClosable: true,
-                            })
+                            });
                             setTimeout(() => {
                                 setSubmitting(false);
-                                navigate("/")
+                                navigate('/');
                             }, 500);
                         }}
                     >
@@ -77,7 +78,7 @@ const Login = () => {
                             isSubmitting,
                             /* and other goodies */
                         }) => (
-                            <Form className='w-full flex flex-col items-center' onSubmit={handleSubmit}>
+                            <Form className="w-full flex flex-col items-center" onSubmit={handleSubmit}>
                                 <Field name="username" validate={validateUsername}>
                                     {({ field, form }: { field: any; form: any }) => (
                                         <FormControl
@@ -134,7 +135,7 @@ const Login = () => {
                                     rounded={'3xl'}
                                     width={'80%'}
                                     mt={6}
-                                    type='submit'
+                                    type="submit"
                                     isLoading={isSubmitting}
                                 >
                                     login
@@ -144,15 +145,21 @@ const Login = () => {
                     </Formik>
                     <Text my={2}>Or Sign Up Using</Text>
                     <Box>
-                        <Link href="/auth-face-book" title="Login with Faceboox">
-                            <Icon mx={2} as={BsFacebook} />
-                        </Link>
-                        <Link href="/auth-twitter" title="Login with Twitter">
-                            <Icon mx={2} as={BsTwitter} />
-                        </Link>
-                        <Link href="/auth-instagram" title="Login with Instagram">
-                            <Icon mx={2} as={BsInstagram} />
-                        </Link>
+                        <Tooltip label="Login with Faceboox" openDelay={250}>
+                            <Link href="/auth-face-book">
+                                <Icon mx={2} as={BsFacebook} />
+                            </Link>
+                        </Tooltip>
+                        <Tooltip label="Login with Twitter" openDelay={250}>
+                            <Link href="/auth-twitter">
+                                <Icon mx={2} as={BsTwitter} />
+                            </Link>
+                        </Tooltip>
+                        <Tooltip label="Login with Instagram" openDelay={250}>
+                            <Link href="/auth-instagram">
+                                <Icon mx={2} as={BsInstagram} />
+                            </Link>
+                        </Tooltip>
                     </Box>
                 </Box>
                 <Box display={'flex'} flexDirection={'column'} alignItems={'center'}>
